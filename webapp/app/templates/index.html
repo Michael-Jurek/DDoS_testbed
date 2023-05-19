@@ -3,92 +3,675 @@
   <head>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="/static/main.js"></script>
+    <script src="/static/attacks.js"></script>
+    <script src="/static/victim.js"></script>
+    <link href="../static/style.css" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" href="static/bootstrap/css/bootstrap.min.css" />
+    <script src="static/bootstrap/js/bootstrap.min.js"></script>
     <title>Botnet control</title>
   </head>
-  <body>
-    <form id="generate_botnet_form" method="post" action="/generate_botnet">
-      <h1>Botnet configuration</h1>
-      <label for="bots_number">Number of bots:</label>
-      <input
-        type="number"
-        id="bots_number"
-        name="bots_number"
-        min="1"
-        value="5"
-      /><br />
+  <body class="bg-success-subtle">
+    <h1>DDoS testbed</h1>
+    <!-- BOTNET CONFIG -->
+    <div class="row justify-content-center my-4 mx-3">
+      <div class="col-md-4">
+        <div class="border p-3 bg-body-secondary border-black">
+          <form
+            id="generate_botnet_form"
+            method="post"
+            action="/generate_botnet"
+            autocomplete="off"
+          >
+            <div class="center"><h2>Botnet configuration</h2></div>
 
-      <label for="cpu_cores_per_container">CPU cores per container:</label>
-      <input
-        type="number"
-        id="cpu_cores_per_container"
-        name="cpu_cores_per_container"
-        min="1"
-        value="1"
-      /><br />
-      <label for="memory_limit">Memory limitation per container:</label>
-      <input
-        type="number"
-        id="memory_limit"
-        name="memory_limit"
-        min="1"
-        value="6"
-      />
-      <select name="memory_unit">
-        <option value="MB">MB</option>
-        <option value="GB">GB</option></select
-      ><br /><br />
+            <br />
+            <div class="input-group">
+              <div class="col-sm-4">
+                <label for="bots_number" class="form-label"
+                  >Number of bots:</label
+                >
+              </div>
+              <div class="col-sm-3">
+                <input
+                  type="number"
+                  id="bots_number"
+                  name="bots_number"
+                  min="1"
+                  value="5"
+                  class="form-control"
+                />
+              </div>
+            </div>
 
-      <label for="disk_select">Select Disk to limit IOPS:</label>
-      <select id="disk_select" name="disk">
-        {% for disk in disks %}
-        <option value="{{ disk }}">{{ disk }}</option>
-        {% endfor %}
-      </select>
+            <h3>Resources</h3>
+
+            <div class="input-group">
+              <div class="col-sm-6">
+                <label for="cpu_cores_per_container" class="form-label"
+                  >CPU cores per container:</label
+                >
+              </div>
+              <div class="col-sm-3">
+                <input
+                  type="number"
+                  step="0.01"
+                  id="cpu_cores_per_container"
+                  name="cpu_cores_per_container"
+                  value="1"
+                  class="form-control"
+                />
+              </div>
+            </div>
+
+            <div class="input-group">
+              <div class="col-sm-6">
+                <label for="memory_limit" class="form-label"
+                  >Memory limitation per container:
+                </label>
+              </div>
+              <div class="col-sm-3">
+                <input
+                  type="number"
+                  id="memory_limit"
+                  name="memory_limit"
+                  value="500"
+                  class="form-control"
+                />
+              </div>
+              <div class="col-sm-3">
+                <select name="memory_unit" class="form-select">
+                  <option value="MB">MB</option>
+                  <option value="GB">GB</option>
+                </select>
+              </div>
+            </div>
+
+            <h3>Network limitation</h3>
+            <p>Leave blank what you don't to limit</p>
+
+            <div class="input-group">
+              <div class="col-sm-4">
+                <label for="packet_loss" class="form-label"
+                  >Packet Loss (%):</label
+                >
+              </div>
+              <div class="col-sm-4">
+                <input
+                  class="form-control"
+                  type="text"
+                  id="packet_loss"
+                  name="packet_loss"
+                />
+              </div>
+            </div>
+
+            <div class="input-group">
+              <div class="col-sm-4">
+                <label for="bandwidth" class="form-label">Bandwidth:</label>
+              </div>
+              <div class="col-sm-4">
+                <input
+                  class="form-control"
+                  type="text"
+                  id="bandwidth"
+                  name="bandwidth"
+                />
+              </div>
+              <div class="col-sm-3">
+                <select name="bandwidth_unit" class="form-select">
+                  <option value="MB">MB/s</option>
+                  <option value="KB">KB/s</option>
+                  <option value="GB">GB/s</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="input-group">
+              <div class="col-sm-4">
+                <label for="delay" class="form-label">Delay (ms):</label>
+              </div>
+              <div class="col-sm-4">
+                <input
+                  type="text"
+                  id="delay"
+                  name="delay"
+                  class="form-control"
+                />
+              </div>
+            </div>
+            <br />
+            <div class="center">
+              <input
+                type="submit"
+                class="btn btn-secondary"
+                value="Generate Bots"
+              />
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- MONITORING -->
+      <div class="col-md-4">
+        <div class="border p-3 bg-body-secondary border-black">
+          <div class="center"><h2>Victim server</h2></div>
+          <br />
+          <ul>
+            <li>Apache version: <span class="apache-version"></span></li>
+            <li>CPU Cores: <span class="victim-cpu-cores"></span></li>
+            <li>
+              Memory Limit: <span class="victim-memory-limit"></span>
+              <span class="victim-memory-unit"></span>
+            </li>
+          </ul>
+          <p><b>Edit victim:</b></p>
+          <form
+            id="edit_victim_form"
+            method="post"
+            autocomplete="off"
+            action="/edit_victim"
+          >
+            <div class="input-group">
+              <div class="col-sm-4">
+                <label for="apache_version" class="form-label"
+                  >Apache version:</label
+                >
+              </div>
+              <div class="col-sm-3">
+                <select
+                  id="apache_version"
+                  name="apache_version"
+                  class="form-select"
+                >
+                  <option value="2.2.34">2.2.34</option>
+                  <option value="2.4.29">2.4.29</option>
+                  <option value="2.4.56">2.4.56</option>
+                </select>
+              </div>
+            </div>
+            <div class="input-group">
+              <div class="col-sm-4">
+                <label for="victim_cpu_cores" class="form-label"
+                  >CPU cores:</label
+                >
+              </div>
+              <div class="col-sm-3">
+                <input
+                  type="number"
+                  id="victim_cpu_cores"
+                  name="victim_cpu_cores"
+                  step="0.01"
+                  value="1"
+                  min="0"
+                  class="form-control"
+                />
+              </div>
+            </div>
+
+            <div class="input-group">
+              <div class="col-sm-4">
+                <label for="victim_memory_limit" class="form-label"
+                  >Memory limitation:</label
+                >
+              </div>
+              <div class="col-sm-3">
+                <input
+                  type="number"
+                  id="victim_memory_limit"
+                  name="victim_memory_limit"
+                  min="1"
+                  value="500"
+                  class="form-control"
+                />
+              </div>
+              <div class="col-sm-2">
+                <select id="memory_unit" name="memory_unit" class="form-select">
+                  <option value="MB">MB</option>
+                  <option value="GB">GB</option>
+                </select>
+              </div>
+            </div>
+            <br />
+            <div class="text-center">
+              <input
+                type="submit"
+                value="Edit victim resources"
+                class="btn btn-secondary"
+              />
+            </div>
+          </form>
+        </div>
+        <br />
+        <br />
+        <div class="text-center">
+          <button
+            onclick="window.open('http://localhost:3000', '_blank');"
+            class="btn btn-lg btn-warning"
+          >
+            Monitoring
+          </button>
+        </div>
+      </div>
+      <!-- ATTACK CONFIG -->
+      <div class="col-md-4">
+        <div class="border p-3 bg-body-secondary border-black">
+          <div class="center"><h2>Attack configuration</h2></div>
+
+          <br />
+
+          <form id="icmp_flood_form" action="/icmp_flood" autocomplete="off">
+            <p><b>ICMP Flood</b></p>
+            <!-- <h5>ICMP Flood</h5> -->
+            <div
+              class="modal fade"
+              id="icmpFloodModal"
+              tabindex="-1"
+              aria-labelledby="icmpFloodModalLabel"
+              aria-hidden="true"
+            >
+              <div class="modal-dialog">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="icmpFloodModalLabel">
+                      ICMP Flood Attack
+                    </h5>
+                    <button
+                      type="button"
+                      class="btn-close"
+                      data-bs-dismiss="modal"
+                      aria-label="Close"
+                    ></button>
+                  </div>
+                  <div class="modal-body">
+                    <div class="form-group">
+                      <label for="spoof">Spoof the source address?</label>
+                      <select
+                        id="spoof_select"
+                        name="spoof_select"
+                        class="form-control"
+                      >
+                        {% if icmp_flood_data['spoof_select'] == 'no' %}
+                        <option value="no" selected>No</option>
+                        <option value="yes">Yes</option>
+                        {% else %}
+                        <option value="no">No</option>
+                        <option value="yes" selected>Yes</option>
+                        {% endif %}
+                      </select>
+                    </div>
+                    <div
+                      id="ip_address_input"
+                      style="display: none"
+                      class="form-group"
+                    >
+                      <label for="ip_address">Spoofed IP address:</label>
+                      <input
+                        type="text"
+                        class="form-control"
+                        id="ip_address"
+                        name="ip_address"
+                        placeholder="Enter IP address"
+                        value="{{ icmp_flood_data['ip_address'] }}"
+                      />
+                    </div>
+                  </div>
+                  <div class="modal-footer">
+                    <button
+                      type="button"
+                      class="btn btn-secondary"
+                      data-bs-dismiss="modal"
+                    >
+                      Close
+                    </button>
+                    <input
+                      type="submit"
+                      class="btn btn-primary"
+                      value="Submit Configuration"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- Button trigger modal -->
+            <div class="input-group">
+              <!-- <div id="icmp_flood_bot_controls"> -->
+              <div class="col-sm-3">
+                <label class="form-label" for="icmp_flood_bot_count"
+                  >Bot count:</label
+                >
+              </div>
+              <div class="col-sm-3">
+                <input
+                  type="number"
+                  id="icmp_flood_bot_count"
+                  name="icmp_flood_bot_count"
+                  value="0"
+                  class="form-control"
+                />
+              </div>
+              <div class="col-sm-3">
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary"
+                  data-bs-toggle="modal"
+                  data-bs-target="#icmpFloodModal"
+                  id="icmpConfigure"
+                >
+                  Configure
+                </button>
+              </div>
+              <!-- </div> -->
+            </div>
+          </form>
+
+          <form id="slowloris_form" action="/slowloris" autocomplete="off">
+            <br />
+            <p><b>Slowloris</b></p>
+
+            <!-- <h6>Slowloris</h6> -->
+            <div
+              class="modal fade"
+              id="slowlorisModal"
+              tabindex="-1"
+              aria-labelledby="slowlorisModalLabel"
+              aria-hidden="true"
+            >
+              <div class="modal-dialog">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="slowlorisModalLabel">
+                      Slowloris Attack
+                    </h5>
+                    <button
+                      type="button"
+                      class="btn-close"
+                      data-bs-dismiss="modal"
+                      aria-label="Close"
+                    ></button>
+                  </div>
+                  <div class="modal-body">
+                    <div class="form-group">
+                      <label for="number_of_connections"
+                        >Number of connections per bot:</label
+                      >
+                      <input
+                        type="number"
+                        class="form-control"
+                        id="number_of_connections"
+                        name="number_of_connections"
+                        min="1"
+                        value="{{ slowloris_data['number_of_connections'] }}"
+                      />
+                    </div>
+                    <div class="form-group">
+                      <label for="connection_rate"
+                        >Connection rate per second:</label
+                      >
+                      <input
+                        type="number"
+                        class="form-control"
+                        id="connection_rate"
+                        name="connection_rate"
+                        min="1"
+                        value="{{ slowloris_data['connection_rate'] }}"
+                      />
+                    </div>
+                  </div>
+                  <div class="modal-footer">
+                    <button
+                      type="button"
+                      class="btn btn-secondary"
+                      data-bs-dismiss="modal"
+                    >
+                      Close
+                    </button>
+                    <input
+                      type="submit"
+                      class="btn btn-primary"
+                      value="Submit Configuration"
+                    />
+                  </div>
+                  <!-- </form> -->
+                </div>
+              </div>
+            </div>
+
+            <div class="input-group">
+              <div class="col-sm-3">
+                <label class="form-label" for="slowloris_bot_count"
+                  >Bot count:</label
+                >
+              </div>
+              <div class="col-sm-3">
+                <input
+                  type="number"
+                  id="slowloris_bot_count"
+                  name="slowloris_bot_count"
+                  value="0"
+                  class="form-control"
+                />
+              </div>
+              <div class="col-sm-3">
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary"
+                  data-bs-toggle="modal"
+                  data-bs-target="#slowlorisModal"
+                >
+                  Configure
+                </button>
+              </div>
+            </div>
+          </form>
+          <form id="slow_read_form" action="/slow_read" autocomplete="off">
+            <br />
+            <p><b>Slow Read</b></p>
+            <div
+              class="modal fade"
+              id="slowReadModal"
+              tabindex="-1"
+              aria-labelledby="slowReadModalLabel"
+              aria-hidden="true"
+            >
+              <div class="modal-dialog">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="slowReadModalLabel">
+                      Slow Read Attack
+                    </h5>
+                    <button
+                      type="button"
+                      class="btn-close"
+                      data-bs-dismiss="modal"
+                      aria-label="Close"
+                    ></button>
+                  </div>
+                  <div class="modal-body">
+                    <div class="form-group">
+                      <label for="number_of_connections"
+                        >Number of connections per bot:</label
+                      >
+                      <input
+                        type="number"
+                        class="form-control"
+                        id="number_of_connections"
+                        name="number_of_connections"
+                        min="1"
+                        value="{{ slow_read_data['number_of_connections'] }}"
+                      />
+                    </div>
+                    <div class="form-group">
+                      <label for="connection_rate"
+                        >Connection rate per second:</label
+                      >
+                      <input
+                        type="number"
+                        class="form-control"
+                        id="connection_rate"
+                        name="connection_rate"
+                        min="1"
+                        value="{{ slow_read_data['connection_rate'] }}"
+                      />
+                    </div>
+                    <div class="form-group">
+                      <label for="request_multiplier"
+                        >Connection request multiplier:</label
+                      >
+                      <input
+                        type="number"
+                        class="form-control"
+                        id="request_multiplier"
+                        name="request_multiplier"
+                        min="1"
+                        value="{{ slow_read_data['request_multiplier'] }}"
+                        max="10"
+                      />
+                    </div>
+                    <div class="form-group">
+                      <label for="read_interval"
+                        >Interval between read operations:</label
+                      >
+                      <input
+                        type="number"
+                        class="form-control"
+                        id="read_interval"
+                        name="read_interval"
+                        min="1"
+                        value="{{ slow_read_data['read_interval'] }}"
+                      />
+                    </div>
+                    <div class="form-group">
+                      <label for="read_bytes">Number of bytes to read:</label>
+                      <input
+                        type="number"
+                        class="form-control"
+                        id="read_bytes"
+                        name="read_bytes"
+                        min="1"
+                        value="{{ slow_read_data['read_bytes'] }}"
+                      />
+                    </div>
+                    <div class="form-group">
+                      <label for="window_size_start"
+                        >Start of the range of the TCP advertised window
+                        size:</label
+                      >
+                      <input
+                        type="number"
+                        class="form-control"
+                        id="window_size_start"
+                        name="window_size_start"
+                        min="1"
+                        value="{{ slow_read_data['window_size_start'] }}"
+                      />
+                    </div>
+                    <div class="form-group">
+                      <label for="window_size_end"
+                        >End of the range of the TCP advertised window
+                        size:</label
+                      >
+                      <input
+                        type="number"
+                        class="form-control"
+                        id="window_size_end"
+                        name="window_size_end"
+                        min="1"
+                        value="{{ slow_read_data['window_size_end'] }}"
+                      />
+                    </div>
+                  </div>
+                  <div class="modal-footer">
+                    <button
+                      type="button"
+                      class="btn btn-secondary"
+                      data-bs-dismiss="modal"
+                    >
+                      Close
+                    </button>
+                    <input
+                      type="submit"
+                      class="btn btn-primary"
+                      value="Submit Configuration"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="input-group">
+              <div class="col-sm-3">
+                <label class="form-label" for="slow_read_bot_count"
+                  >Bot count:</label
+                >
+              </div>
+              <div class="col-sm-3">
+                <input
+                  type="number"
+                  id="slow_read_bot_count"
+                  name="slow_read_bot_count"
+                  value="0"
+                  class="form-control"
+                />
+              </div>
+              <div class="col-sm-3">
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary"
+                  data-bs-toggle="modal"
+                  data-bs-target="#slowReadModal"
+                >
+                  Configure
+                </button>
+              </div>
+              <!-- </div> -->
+            </div>
+          </form>
+
+          <hr />
+
+          <form id="execute_attacks" action="execute_attacks" method="POST">
+            <label for="attack_duration">Attack duration (s):</label>
+            <div class="col-md-6">
+              <input
+                type="number"
+                class="form-control"
+                id="attack_duration"
+                name="attack_duration"
+                min="1"
+                value="30"
+                required
+              />
+            </div>
+            <br />
+            <div class="submit_attack">
+              <input
+                type="submit"
+                class="btn btn-secondary"
+                value="Execute_attacks"
+              />
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- BOTNET INFORMATION  -->
+    <div class="text-center">
+      <h2>Botnet information</h2>
+      <h5>Number of bots: <span id="bot-count"></span></h5>
       <br />
-      <label for="write_iops">Write IOPS:</label>
-      <input
-        type="number"
-        id="write_iops"
-        name="write_iops"
-        min="0"
-        value="500"
-      />
-      <label for="read_iops">Read IOPS:</label>
-      <input
-        type="number"
-        id="read_iops"
-        name="read_iops"
-        min="0"
-        value="500"
-      />
-      <br /><br /><input type="submit" value="Generate Bots" />
-    </form>
-    <!-- <br />
-    <label for="swap_memory">Swap memory:</label><br />
-    <input type="number" id="swap_memory" name="swap_memory" /><br />
-    <br /> -->
-    <button id="remove_botnet">Remove botnet</button>
-    <form action="show_botnet">
-      <input type="submit" value="Show botnet" name="action1" />
-    </form>
-    <hr />
-    <h1>Attack configuration</h1>
-    <button id="ping">Ping</button>
-    <button id="icmp_flood">ICMP Flood</button> <br />
-    <button id="stop_attack">Stop attack</button>
-    <hr />
-    <div
-      style="
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        height: 50px;
-        background-color: #f2f2f2;
-      "
-    >
-      <button onclick="window.open('http://localhost:3000', '_blank');">
-        Monitoring
+
+      <form action="show_botnet">
+        <input type="submit" class="btn btn-secondary" value="Show botnet" />
+      </form>
+      <button id="remove_botnet" class="btn btn-secondary">
+        Remove botnet
       </button>
+      <form
+        id="limit_network_form"
+        method="post"
+        action="/limit_network"
+      ></form>
     </div>
   </body>
 </html>

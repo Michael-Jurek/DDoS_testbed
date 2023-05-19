@@ -1,15 +1,267 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <!-- <script src="jquery-3.6.0.min.js"></script> -->
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-        <script src="/static/main.js"></script>
-        <title>Botnet</title>
-    </head>
-<body>
-    <!-- <button id=info>Info</button> -->
-    {% for bot in bots %}
-        <p>{{bot['container_id']}}</p>
-    {% endfor%}    
-    </body>
+  <head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="/static/main.js"></script>
+    <link href="../static/style.css" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" href="static/bootstrap/css/bootstrap.min.css" />
+    <script src="static/bootstrap/js/bootstrap.min.js"></script>
+    <title>Botnet</title>
+  </head>
+  <body class="bg-success-subtle text-center">
+    <h1>Botnet detail</h1>
+    <br /><br />
+    <div class="row justify-content-center">
+      <div class="col-md-6">
+        <!-- <div class="border p-3 bg-body-secondary border-black"> -->
+        <div class="bot-table border-black">
+          <table class="table border-black table-light table-striped">
+            <thead class="table-dark">
+              <tr>
+                <th>Bot</th>
+                <th>CPU Cores</th>
+                <th>Memory Limit</th>
+                <th>Packet Loss (%)</th>
+                <th>Bandwidth (/s)</th>
+                <th>Delay (ms)</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for bot in bot_data %}
+              <tr>
+                <td style="text-align: center">{{ bot['id'] }}</td>
+                <td style="text-align: center">{{ bot['cpu_cores'] }}</td>
+                <td style="text-align: center">
+                  {{ bot['memory_limit'] }} {{ bot['memory_unit'] }}
+                </td>
+                <td style="text-align: center">{{ bot['packet_loss'] }}</td>
+                <td style="text-align: center">
+                  {{ bot['bandwidth'] }} {{ bot['bandwidth_unit'] }}
+                </td>
+                <td style="text-align: center">{{ bot['delay'] }}</td>
+                <td>
+                  <button
+                    class="edit-bot btn btn-outline-success"
+                    data-id="{{ bot['container_id'] }},{{ bot['cpu_cores'] }},{{ bot['memory_limit'] }}, {{ bot['memory_unit'] }}, {{ bot['packet_loss'] }},{{ bot['bandwidth'] }},{{ bot['bandwidth_unit'] }},{{ bot['delay'] }}"
+                    data-bs-toggle="modal"
+                    data-bs-target="#edit-modal"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    class="delete-bot btn btn-outline-danger"
+                    data-id="{{ bot['container_id'] }}"
+                  >
+                    Delete
+                  </button>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div
+      class="modal fade"
+      id="edit-modal"
+      tabindex="-1"
+      aria-labelledby="edit-modal-label"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <form id="edit-bot-form" autocomplete="off" method="POST">
+            <input type="hidden" id="container_id" name="container_id" />
+            <div class="modal-header">
+              <h5 class="modal-title" id="edit-modal-label">Edit Bot</h5>
+              <button
+                type="button"
+                class="btn-close"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              ></button>
+            </div>
+            <div class="modal-body">
+              <h3>Resources</h3>
+              <label for="cpu_cores_per_container"
+                >CPU cores per container:</label
+              >
+              <input
+                type="number"
+                step="0.01"
+                id="cpu_cores_per_container"
+                name="cpu_cores_per_container"
+                value="1"
+              />
+              <br />
+              <label for="memory_limit">Memory limitation per container:</label>
+              <input
+                type="number"
+                id="memory_limit"
+                name="memory_limit"
+                value="500"
+              />
+              <select name="memory_unit" id="memory_unit">
+                <option value="MB">MB</option>
+                <option value="GB">GB</option>
+              </select>
+              <br />
+              <h3>Network limitation</h3>
+              <p>Leave blank what you don't want to limit</p>
+              <label for="packet_loss">Packet Loss (%):</label>
+              <input type="text" id="packet_loss" name="packet_loss" /><br />
+              <label for="bandwidth">Bandwidth:</label>
+              <input type="text" id="bandwidth" name="bandwidth" />
+              <select name="bandwidth_unit" id="bandwidth_unit">
+                <option value="MB">MB/s</option>
+                <option value="KB">KB/s</option>
+                <option value="GB">GB/s</option>
+              </select>
+              <br />
+              <label for="delay">Delay (ms):</label>
+              <input type="text" id="delay" name="delay" /><br />
+            </div>
+            <div class="modal-footer">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                data-bs-dismiss="modal"
+              >
+                Close
+              </button>
+              <button type="submit" class="btn btn-primary">
+                Save changes
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    <hr />
+    <h2>Edit all bots</h2>
+    <div class="row justify-content-center my-4 mx-3">
+      <div class="col-md-4">
+        <div class="border p-3 bg-body-secondary border-black">
+          <!-- <div class="center"> -->
+
+          <form
+            id="edit_botnet_form"
+            method="post"
+            action="/edit_botnet"
+            autocomplete="off"
+          >
+            <h3>Resources</h3>
+
+            <div class="input-group">
+              <div class="col-sm-6">
+                <label for="cpu_cores_per_container" class="form-label"
+                  >CPU cores per container:</label
+                >
+              </div>
+              <div class="col-sm-3">
+                <input
+                  type="number"
+                  step="0.01"
+                  id="cpu_cores_per_container"
+                  name="cpu_cores_per_container"
+                  value="1"
+                  class="form-control"
+                />
+                <!--  class="form-control bg-secondary text-white border-secondary" -->
+              </div>
+            </div>
+
+            <div class="input-group">
+              <div class="col-sm-6">
+                <label for="memory_limit" class="form-label"
+                  >Memory limitation per container:
+                </label>
+              </div>
+              <div class="col-sm-3">
+                <input
+                  type="number"
+                  id="memory_limit"
+                  name="memory_limit"
+                  value="500"
+                  class="form-control"
+                />
+              </div>
+              <div class="col-sm-3">
+                <select name="memory_unit" class="form-select">
+                  <option value="MB">MB</option>
+                  <option value="GB">GB</option>
+                </select>
+              </div>
+            </div>
+
+            <h3>Network limitation</h3>
+            <p>Leave blank what you don't to limit</p>
+
+            <div class="input-group">
+              <div class="col-sm-4">
+                <label for="packet_loss" class="form-label"
+                  >Packet Loss (%):</label
+                >
+              </div>
+              <div class="col-sm-4">
+                <input
+                  class="form-control"
+                  type="text"
+                  id="packet_loss"
+                  name="packet_loss"
+                />
+              </div>
+            </div>
+
+            <div class="input-group">
+              <div class="col-sm-4">
+                <label for="bandwidth" class="form-label">Bandwidth:</label>
+              </div>
+              <div class="col-sm-4">
+                <input
+                  class="form-control"
+                  type="text"
+                  id="bandwidth"
+                  name="bandwidth"
+                />
+              </div>
+              <div class="col-sm-3">
+                <select name="bandwidth_unit" class="form-select">
+                  <option value="MB">MB/s</option>
+                  <option value="KB">KB/s</option>
+                  <option value="GB">GB/s</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="input-group">
+              <div class="col-sm-4">
+                <label for="delay" class="form-label">Delay (ms):</label>
+              </div>
+              <div class="col-sm-4">
+                <input
+                  type="text"
+                  id="delay"
+                  name="delay"
+                  class="form-control"
+                />
+              </div>
+            </div>
+
+            <br />
+            <input class="btn btn-secondary" type="submit" value="Edit Bots" />
+          </form>
+        </div>
+      </div>
+    </div>
+    <button class="btn btn-secondary" id="remove_botnet">Remove botnet</button>
+    <br />
+
+    <button class="btn btn-secondary" onclick="window.location.href = '/';">
+      Menu
+    </button>
+    <br />
+  </body>
 </html>

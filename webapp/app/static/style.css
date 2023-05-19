@@ -1,0 +1,27 @@
+h1{
+  text-align: center;
+  padding-top: 20px;
+}
+
+.option-form {
+  display: none;
+}
+
+.option-form.active {
+  display: block;
+}
+
+.submit_attack {
+  display: flex;
+  justify-content: center;
+}
+
+.center {
+  display: flex;
+  justify-content: center;
+}
+
+.bot-table{
+  margin-left: 90px;
+
+}
